@@ -100,6 +100,18 @@ def create_opportunity_contact_role(access_token, instance_url, opportunity_id, 
     return result.get('id')
 
 
+def parse_event_body(event):
+    """Parse event body for both direct invocation and Function URL calls."""
+    # If called via Function URL, body is a JSON string
+    if 'body' in event and isinstance(event.get('body'), str):
+        try:
+            return json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {}
+    # Direct invocation - event is the payload
+    return event
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler to create a new primary contact for a given opportunity.
@@ -129,10 +141,13 @@ def lambda_handler(event, context):
     }
     """
     try:
+        # Parse event body (handles both direct invocation and Function URL)
+        body = parse_event_body(event)
+        
         # Validate required fields
-        opportunity_id = event.get('opportunity_id')
-        contact_data = event.get('contact', {})
-        role = event.get('role')
+        opportunity_id = body.get('opportunity_id')
+        contact_data = body.get('contact', {})
+        role = body.get('role')
         
         if not opportunity_id:
             return {

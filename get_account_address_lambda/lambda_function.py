@@ -106,6 +106,18 @@ def format_address(street, city, state, postal_code, country):
     return '\n'.join(parts) if parts else None
 
 
+def parse_event_body(event):
+    """Parse event body for both direct invocation and Function URL calls."""
+    # If called via Function URL, body is a JSON string
+    if 'body' in event and isinstance(event.get('body'), str):
+        try:
+            return json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {}
+    # Direct invocation - event is the payload
+    return event
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler to get Account address from Opportunity ID.
@@ -132,7 +144,9 @@ def lambda_handler(event, context):
     }
     """
     try:
-        opportunity_id = event.get('opportunity_id')
+        # Parse event body (handles both direct invocation and Function URL)
+        body = parse_event_body(event)
+        opportunity_id = body.get('opportunity_id')
         
         if not opportunity_id:
             return {

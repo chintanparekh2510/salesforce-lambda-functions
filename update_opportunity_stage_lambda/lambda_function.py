@@ -91,6 +91,18 @@ def update_opportunity_stage(access_token, instance_url, opportunity_id, new_sta
     return True
 
 
+def parse_event_body(event):
+    """Parse event body for both direct invocation and Function URL calls."""
+    # If called via Function URL, body is a JSON string
+    if 'body' in event and isinstance(event.get('body'), str):
+        try:
+            return json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {}
+    # Direct invocation - event is the payload
+    return event
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler to get or update Opportunity stage.
@@ -129,8 +141,10 @@ def lambda_handler(event, context):
     }
     """
     try:
-        opportunity_id = event.get('opportunity_id')
-        new_stage = event.get('stage')
+        # Parse event body (handles both direct invocation and Function URL)
+        body = parse_event_body(event)
+        opportunity_id = body.get('opportunity_id')
+        new_stage = body.get('stage')
         
         # Validate required fields
         if not opportunity_id:

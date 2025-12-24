@@ -569,6 +569,18 @@ def validate_renewal_opportunity(access_token, instance_url, opportunity_id):
     return result
 
 
+def parse_event_body(event):
+    """Parse event body for both direct invocation and Function URL calls."""
+    # If called via Function URL, body is a JSON string
+    if 'body' in event and isinstance(event.get('body'), str):
+        try:
+            return json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {}
+    # Direct invocation - event is the payload
+    return event
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler to validate a renewal opportunity.
@@ -581,7 +593,9 @@ def lambda_handler(event, context):
     Returns detailed validation report.
     """
     try:
-        opportunity_id = event.get('opportunity_id')
+        # Parse event body (handles both direct invocation and Function URL)
+        body = parse_event_body(event)
+        opportunity_id = body.get('opportunity_id')
         
         if not opportunity_id:
             return {

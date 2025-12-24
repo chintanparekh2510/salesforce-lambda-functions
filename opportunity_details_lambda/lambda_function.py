@@ -142,6 +142,18 @@ def get_opportunity_netsuite_link(access_token, instance_url, opportunity_id):
     return None
 
 
+def parse_event_body(event):
+    """Parse event body for both direct invocation and Function URL calls."""
+    # If called via Function URL, body is a JSON string
+    if 'body' in event and isinstance(event.get('body'), str):
+        try:
+            return json.loads(event['body'])
+        except json.JSONDecodeError:
+            return {}
+    # Direct invocation - event is the payload
+    return event
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler to get Opportunity Contact Roles and NetSuite Sub Link.
@@ -167,7 +179,9 @@ def lambda_handler(event, context):
     }
     """
     try:
-        opportunity_id = event.get('opportunity_id')
+        # Parse event body (handles both direct invocation and Function URL)
+        body = parse_event_body(event)
+        opportunity_id = body.get('opportunity_id')
         
         if not opportunity_id:
             return {
