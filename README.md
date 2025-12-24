@@ -65,13 +65,13 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
 
 ---
 
-### 2. Create Primary Contact
+### 2. Create Contact
 
 **URL:** `https://pnftoxyldkuoefhr6gcxp27que0xzuda.lambda-url.us-east-1.on.aws/`
 
 **Method:** POST
 
-**Description:** Creates a new Contact and links it as the Primary Contact for an Opportunity.
+**Description:** Creates a new Contact and links it to an Opportunity. Can be set as primary or normal contact.
 
 **Input Parameters:**
 ```json
@@ -84,6 +84,7 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
         "Phone": "555-1234",                  // Optional
         "Title": "CEO"                        // Optional
     },
+    "primary": true,                          // Optional - Set as primary contact (default: true)
     "role": "Decision Maker"                  // Optional - Role for OpportunityContactRole
 }
 ```
@@ -97,6 +98,7 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
         "contact_id": "003XXXXXXXXXXXXXXX",
         "opportunity_contact_role_id": "00KXXXXXXXXXXXXXXX",
         "opportunity_name": "Acme Corp Renewal",
+        "is_primary": true,
         "message": "Primary contact created successfully for opportunity: Acme Corp Renewal"
     }
 }

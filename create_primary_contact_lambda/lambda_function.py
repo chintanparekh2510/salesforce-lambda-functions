@@ -114,7 +114,7 @@ def parse_event_body(event):
 
 def lambda_handler(event, context):
     """
-    AWS Lambda handler to create a new primary contact for a given opportunity.
+    AWS Lambda handler to create a new contact for a given opportunity.
     
     Expected event structure:
     {
@@ -126,6 +126,7 @@ def lambda_handler(event, context):
             "Phone": "555-1234",
             "Title": "CEO"
         },
+        "primary": true,          # Optional: Set as primary contact (default: true)
         "role": "Decision Maker"  # Optional: Role for OpportunityContactRole
     }
     
@@ -136,6 +137,7 @@ def lambda_handler(event, context):
             "success": true,
             "contact_id": "003XXXXXXXXXXXXXXX",
             "opportunity_contact_role_id": "00KXXXXXXXXXXXXXXX",
+            "is_primary": true,
             "message": "Primary contact created successfully"
         }
     }
@@ -148,6 +150,12 @@ def lambda_handler(event, context):
         opportunity_id = body.get('opportunity_id')
         contact_data = body.get('contact', {})
         role = body.get('role')
+        # Default to True if not specified (backwards compatible)
+        is_primary = body.get('primary', True)
+        
+        # Handle string "false" or "true" values
+        if isinstance(is_primary, str):
+            is_primary = is_primary.lower() == 'true'
         
         if not opportunity_id:
             return {
@@ -180,15 +188,18 @@ def lambda_handler(event, context):
         # Create the Contact
         contact_id = create_contact(access_token, instance_url, contact_data)
         
-        # Create OpportunityContactRole to link Contact as Primary
+        # Create OpportunityContactRole to link Contact
         ocr_id = create_opportunity_contact_role(
             access_token=access_token,
             instance_url=instance_url,
             opportunity_id=opportunity_id,
             contact_id=contact_id,
-            is_primary=True,
+            is_primary=is_primary,
             role=role
         )
+        
+        # Build response message based on primary status
+        contact_type = "Primary contact" if is_primary else "Contact"
         
         return {
             'statusCode': 200,
@@ -197,7 +208,8 @@ def lambda_handler(event, context):
                 'contact_id': contact_id,
                 'opportunity_contact_role_id': ocr_id,
                 'opportunity_name': opp_name,
-                'message': f'Primary contact created successfully for opportunity: {opp_name}'
+                'is_primary': is_primary,
+                'message': f'{contact_type} created successfully for opportunity: {opp_name}'
             })
         }
         
@@ -213,7 +225,7 @@ def lambda_handler(event, context):
 
 # For local testing
 if __name__ == "__main__":
-    # Example test event
+    # Example test event - Primary contact
     test_event = {
         "opportunity_id": "006XXXXXXXXXXXXXXX",  # Replace with actual Opportunity ID
         "contact": {
@@ -223,6 +235,7 @@ if __name__ == "__main__":
             "Phone": "555-9876",
             "Title": "VP of Sales"
         },
+        "primary": True,  # Set to False to add as normal contact
         "role": "Decision Maker"
     }
     
