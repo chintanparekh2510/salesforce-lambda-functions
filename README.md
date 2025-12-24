@@ -74,18 +74,21 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
 **Description:** Creates a new Contact and links it to an Opportunity. Can be set as primary or normal contact.
 
 **Input Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `opportunity_id` | string | Yes | Salesforce Opportunity ID |
+| `firstname` | string | No | Contact's first name |
+| `lastname` | string | Yes | Contact's last name |
+| `email` | string | No | Contact's email address |
+| `primary` | boolean | No | Set as primary contact (default: true) |
+
 ```json
 {
-    "opportunity_id": "006XXXXXXXXXXXXXXX",  // Required - Salesforce Opportunity ID
-    "contact": {
-        "FirstName": "John",                  // Optional
-        "LastName": "Doe",                    // Required
-        "Email": "john.doe@example.com",      // Optional
-        "Phone": "555-1234",                  // Optional
-        "Title": "CEO"                        // Optional
-    },
-    "primary": true,                          // Optional - Set as primary contact (default: true)
-    "role": "Decision Maker"                  // Optional - Role for OpportunityContactRole
+    "opportunity_id": "006XXXXXXXXXXXXXXX",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "john.doe@example.com",
+    "primary": true
 }
 ```
 

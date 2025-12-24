@@ -118,16 +118,11 @@ def lambda_handler(event, context):
     
     Expected event structure:
     {
-        "opportunity_id": "006XXXXXXXXXXXXXXX",
-        "contact": {
-            "FirstName": "John",
-            "LastName": "Doe",
-            "Email": "john.doe@example.com",
-            "Phone": "555-1234",
-            "Title": "CEO"
-        },
-        "primary": true,          # Optional: Set as primary contact (default: true)
-        "role": "Decision Maker"  # Optional: Role for OpportunityContactRole
+        "opportunity_id": "006XXXXXXXXXXXXXXX",  // Required
+        "firstname": "John",                      // Optional
+        "lastname": "Doe",                        // Required
+        "email": "john.doe@example.com",          // Optional
+        "primary": true                           // Optional (default: true)
     }
     
     Returns:
@@ -146,17 +141,18 @@ def lambda_handler(event, context):
         # Parse event body (handles both direct invocation and Function URL)
         body = parse_event_body(event)
         
-        # Validate required fields
+        # Get flat input parameters
         opportunity_id = body.get('opportunity_id')
-        contact_data = body.get('contact', {})
-        role = body.get('role')
-        # Default to True if not specified (backwards compatible)
+        firstname = body.get('firstname', '')
+        lastname = body.get('lastname', '')
+        email = body.get('email', '')
         is_primary = body.get('primary', True)
         
         # Handle string "false" or "true" values
         if isinstance(is_primary, str):
             is_primary = is_primary.lower() == 'true'
         
+        # Validate required fields
         if not opportunity_id:
             return {
                 'statusCode': 400,
@@ -166,14 +162,23 @@ def lambda_handler(event, context):
                 })
             }
         
-        if not contact_data.get('LastName'):
+        if not lastname:
             return {
                 'statusCode': 400,
                 'body': json.dumps({
                     'success': False,
-                    'error': 'contact.LastName is required'
+                    'error': 'lastname is required'
                 })
             }
+        
+        # Build contact data
+        contact_data = {
+            'LastName': lastname
+        }
+        if firstname:
+            contact_data['FirstName'] = firstname
+        if email:
+            contact_data['Email'] = email
         
         # Get access token
         access_token, instance_url = get_access_token()
@@ -195,7 +200,7 @@ def lambda_handler(event, context):
             opportunity_id=opportunity_id,
             contact_id=contact_id,
             is_primary=is_primary,
-            role=role
+            role=None
         )
         
         # Build response message based on primary status
@@ -225,18 +230,13 @@ def lambda_handler(event, context):
 
 # For local testing
 if __name__ == "__main__":
-    # Example test event - Primary contact
+    # Example test event
     test_event = {
         "opportunity_id": "006XXXXXXXXXXXXXXX",  # Replace with actual Opportunity ID
-        "contact": {
-            "FirstName": "Jane",
-            "LastName": "Smith",
-            "Email": "jane.smith@example.com",
-            "Phone": "555-9876",
-            "Title": "VP of Sales"
-        },
-        "primary": True,  # Set to False to add as normal contact
-        "role": "Decision Maker"
+        "firstname": "Jane",
+        "lastname": "Smith",
+        "email": "jane.smith@example.com",
+        "primary": True  # Set to False to add as normal contact
     }
     
     result = lambda_handler(test_event, None)
