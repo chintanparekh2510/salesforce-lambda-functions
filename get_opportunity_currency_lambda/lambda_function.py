@@ -3,6 +3,15 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import os
+from decimal import Decimal
+
+
+class DecimalEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles Decimal types."""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
 
 # Salesforce OAuth Configuration (from environment variables)
 SALESFORCE_INSTANCE_URL = os.environ.get('SALESFORCE_INSTANCE_URL', 'https://nosoftware-speed-9330.my.salesforce.com')
@@ -131,6 +140,11 @@ def lambda_handler(event, context):
                 })
             }
         
+        # Convert amount to float to handle Decimal types
+        amount = opp.get('Amount')
+        if amount is not None:
+            amount = float(amount)
+        
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -138,8 +152,8 @@ def lambda_handler(event, context):
                 'opportunity_id': opp.get('Id'),
                 'opportunity_name': opp.get('Name'),
                 'currency_iso_code': opp.get('CurrencyIsoCode'),
-                'amount': opp.get('Amount')
-            }, indent=2)
+                'amount': amount
+            }, cls=DecimalEncoder, indent=2)
         }
         
     except Exception as e:
