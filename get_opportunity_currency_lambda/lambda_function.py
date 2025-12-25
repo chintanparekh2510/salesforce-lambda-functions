@@ -6,12 +6,16 @@ import os
 from decimal import Decimal
 
 
-class DecimalEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles Decimal types."""
-    def default(self, obj):
-        if isinstance(obj, Decimal):
-            return float(obj)
-        return super().default(obj)
+def convert_floats_to_strings(obj):
+    """Recursively convert all float/Decimal values to strings for Bedrock compatibility."""
+    if isinstance(obj, dict):
+        return {key: convert_floats_to_strings(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_floats_to_strings(item) for item in obj]
+    elif isinstance(obj, (float, Decimal)):
+        return str(obj)
+    else:
+        return obj
 
 # Salesforce OAuth Configuration (from environment variables)
 SALESFORCE_INSTANCE_URL = os.environ.get('SALESFORCE_INSTANCE_URL', 'https://nosoftware-speed-9330.my.salesforce.com')
@@ -140,20 +144,25 @@ def lambda_handler(event, context):
                 })
             }
         
-        # Convert amount to float to handle Decimal types
+        # Convert amount to string for Bedrock Agent compatibility
         amount = opp.get('Amount')
         if amount is not None:
-            amount = float(amount)
+            amount = str(float(amount))
+        
+        response_data = {
+            'success': True,
+            'opportunity_id': opp.get('Id'),
+            'opportunity_name': opp.get('Name'),
+            'currency_iso_code': opp.get('CurrencyIsoCode'),
+            'amount': amount
+        }
+        
+        # Convert all floats to strings for Bedrock compatibility
+        response_data = convert_floats_to_strings(response_data)
         
         return {
             'statusCode': 200,
-            'body': json.dumps({
-                'success': True,
-                'opportunity_id': opp.get('Id'),
-                'opportunity_name': opp.get('Name'),
-                'currency_iso_code': opp.get('CurrencyIsoCode'),
-                'amount': amount
-            }, cls=DecimalEncoder, indent=2)
+            'body': json.dumps(response_data, indent=2)
         }
         
     except Exception as e:
