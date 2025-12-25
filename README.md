@@ -11,6 +11,7 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
 | Opportunity Details | `https://ctbppan2hfcwrathbfot5fttim0vtqaq.lambda-url.us-east-1.on.aws/` |
 | Update Opportunity Stage | `https://hdeh36q5q63qwxijz2tf7qjtku0hxgzt.lambda-url.us-east-1.on.aws/` |
 | Validate Renewal | `https://yvbo5jb5d5vlanobzyqgb4qgvq0mjixu.lambda-url.us-east-1.on.aws/` |
+| Get Opportunity Currency | `https://cdnnjzsvznb7y3frns6unoi2qi0xxfhw.lambda-url.us-east-1.on.aws/` |
 
 ---
 
@@ -315,6 +316,37 @@ AWS Lambda functions for Salesforce integration - handles Opportunities, Contact
 
 ---
 
+### 6. Get Opportunity Currency
+
+**URL:** `https://cdnnjzsvznb7y3frns6unoi2qi0xxfhw.lambda-url.us-east-1.on.aws/`
+
+**Method:** POST
+
+**Description:** Retrieves the currency ISO code and amount for an Opportunity.
+
+**Input Parameters:**
+```json
+{
+    "opportunity_id": "006XXXXXXXXXXXXXXX"  // Required - Salesforce Opportunity ID
+}
+```
+
+**Output:**
+```json
+{
+    "statusCode": 200,
+    "body": {
+        "success": true,
+        "opportunity_id": "006XXXXXXXXXXXXXXX",
+        "opportunity_name": "Acme Corp Renewal",
+        "currency_iso_code": "USD",
+        "amount": 50000.00
+    }
+}
+```
+
+---
+
 ## 📝 Example cURL Requests
 
 ```bash
@@ -347,6 +379,11 @@ curl -X POST https://hdeh36q5q63qwxijz2tf7qjtku0hxgzt.lambda-url.us-east-1.on.aw
 curl -X POST https://yvbo5jb5d5vlanobzyqgb4qgvq0mjixu.lambda-url.us-east-1.on.aws/ \
   -H "Content-Type: application/json" \
   -d '{"opportunity_id": "006au000007dMheAAE"}'
+
+# Get Opportunity Currency
+curl -X POST https://cdnnjzsvznb7y3frns6unoi2qi0xxfhw.lambda-url.us-east-1.on.aws/ \
+  -H "Content-Type: application/json" \
+  -d '{"opportunity_id": "006au000007dMheAAE"}'
 ```
 
 ---
@@ -357,6 +394,8 @@ curl -X POST https://yvbo5jb5d5vlanobzyqgb4qgvq0mjixu.lambda-url.us-east-1.on.aw
 ├── create_primary_contact_lambda/
 │   └── lambda_function.py
 ├── get_account_address_lambda/
+│   └── lambda_function.py
+├── get_opportunity_currency_lambda/
 │   └── lambda_function.py
 ├── opportunity_details_lambda/
 │   └── lambda_function.py
